@@ -1,129 +1,160 @@
-# ADIA-Lab-Structural-Break-Challenge-Solution
+# ADIA-Lab Structural Break Challenge — Solution
 
-Methods & components (detailed)
-Data loading
+## Overview
 
-Uses the Crunch-provided crunch.load_data() helper to obtain lists of dataframes for training and testing.
+This repository contains a complete solution for the **ADIA-Lab Structural Break Challenge**, which focuses on detecting structural breakpoints in short univariate time series.  
+The notebook implements a reproducible end-to-end pipeline — from feature extraction to model training, inference, and evaluation.
 
-Assumes each sample is a short univariate time series (same format expected by the competition).
+---
 
-Feature engineering
+## Methods & Components (Detailed)
 
-A comprehensive set of features is extracted per time-series segment. Main families include:
+### 1. Data Loading
+- Data is loaded using the `crunch.load_data()` helper provided by the competition.
+- Each sample is a short **univariate time series** with consistent formatting for training and testing.
 
-Time-domain statistics
+---
 
-Mean, median, standard deviation, variance
+### 2. Feature Engineering
 
-Skewness, kurtosis
+A rich set of features is extracted from each time-series segment.  
+Main feature families include:
 
-Min / max / range / percentiles
+#### Time-Domain Statistics
+- Mean, median, standard deviation, variance  
+- Skewness, kurtosis  
+- Minimum, maximum, range, percentiles  
+- First and second differences (derivatives)  
+- Counts of sign changes and zero crossings  
 
-First and second differences (derivatives) statistics
+#### Rolling / Local Features
+- Rolling mean, standard deviation, variance  
+- Local maxima and minima counts, density statistics  
 
-Counts of sign-changes, zero-crossings
+#### Spectral Features
+- Fourier Transform (FFT) magnitude peaks  
+- Energy in specific frequency bands  
+- Power Spectral Density (PSD) summaries  
 
-Rolling / local features
+#### Wavelet Features
+- Wavelet decomposition coefficients and statistics (via **PyWavelets**)  
 
-Rolling statistics (windowed means/std/var)
+#### Distributional / Divergence Measures
+- Jensen–Shannon distance  
+- Kolmogorov–Smirnov style comparisons  
 
-Local maxima/minima counts and densities
+#### Simulated DGP Features
+- Optional data-generating-process features (enabled with `include_dgp=True`)  
+- Capture synthetic dynamics fitted to each segment  
 
-Spectral features
+> All feature extractors are integrated into a unified function returning a `pandas.DataFrame` per sample.
 
-Fourier transform (FFT) magnitude peaks / energy in frequency bands
+---
 
-Power spectral density summaries
+### 3. Feature Selection & Dimensionality Reduction
 
-Wavelet features
+A layered selection pipeline is applied to remove redundant and uninformative features:
 
-Wavelet decomposition coefficients/statistics (via PyWavelets)
+- **VarianceThreshold** — removes near-constant features  
+- **SelectKBest** — keeps top features by univariate score (mutual information or similar)  
+- **RFE (Recursive Feature Elimination)** — iterative wrapper-based feature pruning  
+- **SelectFromModel** — model-based feature importance filtering (e.g., using tree models)
 
-Distributional / divergence measures
+These transformations are stored in a pipeline to ensure consistency between training and inference.
 
-Jensen–Shannon distance, Kolmogorov–Smirnov style comparisons between segments (where applicable)
+---
 
-Simulated DGP features
+### 4. Modeling & Ensembling
 
-Optional features created by estimating / fitting simple data-generating-process characteristics (added as “DGP” features in the code when include_dgp is enabled).
+Multiple models were trained and compared:
 
-Note: the notebook bundles these feature extractors into a features function that outputs a pandas.DataFrame of features for each training sample.
+- **XGBoost Classifier** (main model)  
+- **LightGBM** and **RandomForest** (alternative/ensemble models)  
+- **StackingClassifier** with a **Logistic Regression meta-learner**
 
-Feature selection / dimensionality reduction
+Predictions use **class probabilities** rather than hard labels to enable AUC-based evaluation.
 
-Multiple selection layers are used to reduce redundancy and remove non-informative features:
+---
 
-VarianceThreshold — remove near-constant features.
+### 5. Training Procedure
 
-SelectKBest (univariate scoring — mutual information or other) — pick top features by score.
+The `train()` function performs the full training workflow:
 
-RFE (Recursive Feature Elimination) — wrapper-based selection using an estimator.
+1. Extracts features from all training samples  
+2. Applies the same feature-selection pipeline as used at inference  
+3. Computes **class weights** (via `compute_class_weight`) to handle class imbalance  
+4. Fits the model pipeline  
+5. Computes **AUC-ROC** on a holdout or validation set  
+6. Saves:
+   - Trained model → `model.joblib`
+   - Training metrics → `train_metrics.csv`
 
-SelectFromModel / model-based selection (e.g., based on tree-model importances).
+> No explicit hyperparameter search is included — default parameters are used unless manually set.  
+> For optimization, you can extend this with `GridSearchCV`, `RandomizedSearchCV`, or **Optuna**.
 
-The pipeline builds these steps so the same selection is applied at training and inference.
+---
 
-Models / ensembling
+### 6. Inference
 
-The notebook shows training and evaluation of the following:
+The `infer()` function handles prediction on unseen data:
 
-XGBoost classifier (primary gradient-boosted tree model)
+1. Accepts an iterable of test samples (`Iterable[pd.DataFrame]`)  
+2. Reconstructs the feature extraction and selection pipeline  
+3. Outputs **predicted probabilities** as a `pandas.Series`  
+4. Saves results in the required Crunch format:  
+   `data/prediction.parquet`
 
-LightGBM and RandomForest (used in experiments and possible stacking)
+---
 
-StackingClassifier (meta model combining base learners — LogisticRegression used as meta learner in stacking)
+### 7. Evaluation
 
-Model probabilities are used as final outputs (not raw class predictions) so scoring can be done with AUC-ROC.
+- **Primary metric:** AUC-ROC (`sklearn.metrics.roc_auc_score`)  
+- **Additional outputs:** Feature importances and training diagnostics, stored in DataFrames for analysis
 
-Training procedure
+---
 
-The train() function:
+## 8. Process Overview
 
-Extracts features for each training sample.
+Below is the pipeline diagram representing the workflow used in the notebook:
 
-Applies the feature-selection pipeline.
+![Structural Break Pipeline](https://raw.githubusercontent.com/github/explore/main/topics/flowchart/flowchart.png)
 
-Computes class weights (via compute_class_weight) to handle class imbalance.
+*(Replace the link above with your own diagram image — you can create one using [Mermaid Live Editor](https://mermaid.live/) or [draw.io](https://app.diagrams.net/) and export it as PNG.)*
 
-Fits the model pipeline (feature selector + model).
+**Pipeline summary:**
 
-Computes AUC-ROC on a holdout or cross-validated split (not strictly specified — notebook computes AUC on an available test/validation sample).
+1. **Raw Time-Series Samples**  
+2. → **Feature Engineering**  
+   - Time, spectral, wavelet, and DGP-based features  
+3. → **Feature Cleaning & Scaling**  
+4. → **Feature Selection**  
+5. → **Model Training (XGBoost / LGBM / RF)**  
+6. → **Optional Stacking Meta-Learner**  
+7. → **Saved Model (`model.joblib`)**  
+8. → **Inference (`infer()` → Probabilities)**  
+9. → **Prediction Output (`data/prediction.parquet`)**  
+10. → **Evaluation (AUC-ROC)**  
 
-Saves the fitted pipeline as model.joblib and writes basic training metrics to train_metrics.csv.
+---
 
-Note: explicit cross-validation or hyperparameter search (GridSearchCV / RandomizedSearchCV) is not shown in the notebook; default model hyperparameters appear to be used unless user-specified elsewhere. If you want automatic hyperparameter tuning, adding GridSearchCV or Optuna is recommended.
+## Files Produced
 
-Inference
+| File | Description |
+|------|--------------|
+| `model.joblib` | Trained model and preprocessing pipeline |
+| `train_metrics.csv` | Recorded training metrics (AUC, sample count, etc.) |
+| `data/prediction.parquet` | Inference output (Crunch-compatible) |
+| `X_features_test.csv` *(optional)* | Exported test features for inspection |
 
-The infer() function:
+---
 
-Accepts test set iterator (Iterable[pd.DataFrame]) and the path to the saved model directory.
+## Recommended Improvements
 
-Reconstructs the same features and selection pipeline used in training.
+- **Hyperparameter tuning** — integrate `Optuna` or `GridSearchCV`  
+- **Cross-validation** — apply stratified or time-based CV  
+- **Feature importance** — add SHAP/Permutation Importance analysis  
+- **Performance optimization** — vectorize heavy operations  
+- **Reproducibility** — ensure random seeds and full pipeline serialization  
+- **Testing** — unit tests for `train()` and `infer()` consistency  
 
-Returns predicted probabilities (1D pd.Series) for each sample.
-
-Writes data/prediction.parquet (the Crunch expected output).
-
-Evaluation
-
-Primary metric used: AUC-ROC (sklearn.metrics.roc_auc_score).
-
-Additional diagnostics include feature importances, saved as a DataFrame for inspection.
-
-
-flowchart TD
-  A[Raw time-series samples] --> B[Feature engineering]
-  B --> B1[Time-domain stats]
-  B --> B2[Spectral (FFT, PSD)]
-  B --> B3[Wavelet coefficients]
-  B --> B4[DGP / synthetic features]
-  B --> C[Feature cleaning & scaling]
-  C --> D[Feature selection]
-  D --> E[Model training]
-  E --> E1[XGBoost / LightGBM / RandomForest]
-  E1 --> F[Optional stacking (meta-learner)]
-  F --> G[Saved pipeline/model.joblib]
-  G --> H[Inference: infer() -> probabilities]
-  H --> I[data/prediction.parquet]
-  I --> J[Evaluation (AUC-ROC)]
+---
