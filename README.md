@@ -1,4 +1,5 @@
 # ADIA-Lab Structural Break Challenge — Solution
+
 <img width="1320" height="683" alt="image" src="https://github.com/user-attachments/assets/a6b4ae25-f217-4bae-8055-b4810f50f03e" />
 
 ## Overview
@@ -9,12 +10,14 @@ The notebook implements a reproducible end-to-end pipeline — from feature extr
 Despite spending most of the competition period on reserve duty, I still managed to develop and refine a complete end-to-end pipeline, combining feature engineering, model ensembling, and robust validation strategies.
 
 Out of 490 competitors, my solution ranked 52nd, placing in the top 11% of participants.
+
 <img width="740" height="233" alt="image" src="https://github.com/user-attachments/assets/08a00a36-0b89-4593-8864-836a7c7c18ea" />
 
 ---
 
 
-<img width="4296" height="2570" alt="image" src="https://github.com/user-attachments/assets/918fb56b-0c3b-449c-8531-24aa66b0ce15" />
+<img width="1412" height="824" alt="image" src="https://github.com/user-attachments/assets/9baaf376-2f54-450c-a554-c1af19350fb6" />
+
 
 
 
