@@ -1,11 +1,23 @@
 # ADIA-Lab Structural Break Challenge — Solution
+<img width="1320" height="683" alt="image" src="https://github.com/user-attachments/assets/a6b4ae25-f217-4bae-8055-b4810f50f03e" />
 
 ## Overview
 
 This repository contains a complete solution for the **ADIA-Lab Structural Break Challenge**, which focuses on detecting structural breakpoints in short univariate time series.  
 The notebook implements a reproducible end-to-end pipeline — from feature extraction to model training, inference, and evaluation.
 
+Despite spending most of the competition period on reserve duty, I still managed to develop and refine a complete end-to-end pipeline, combining feature engineering, model ensembling, and robust validation strategies.
+
+Out of 490 competitors, my solution ranked 52nd, placing in the top 11% of participants.
+<img width="740" height="233" alt="image" src="https://github.com/user-attachments/assets/08a00a36-0b89-4593-8864-836a7c7c18ea" />
+
 ---
+
+
+<img width="4296" height="2570" alt="image" src="https://github.com/user-attachments/assets/918fb56b-0c3b-449c-8531-24aa66b0ce15" />
+
+
+
 
 ## Methods & Components (Detailed)
 
@@ -111,50 +123,14 @@ The `infer()` function handles prediction on unseen data:
 - **Primary metric:** AUC-ROC (`sklearn.metrics.roc_auc_score`)  
 - **Additional outputs:** Feature importances and training diagnostics, stored in DataFrames for analysis
 
----
 
-## 8. Process Overview
 
-Below is the pipeline diagram representing the workflow used in the notebook:
-
-![Structural Break Pipeline](https://raw.githubusercontent.com/github/explore/main/topics/flowchart/flowchart.png)
-
-*(Replace the link above with your own diagram image — you can create one using [Mermaid Live Editor](https://mermaid.live/) or [draw.io](https://app.diagrams.net/) and export it as PNG.)*
-
-**Pipeline summary:**
-
-1. **Raw Time-Series Samples**  
-2. → **Feature Engineering**  
-   - Time, spectral, wavelet, and DGP-based features  
-3. → **Feature Cleaning & Scaling**  
-4. → **Feature Selection**  
-5. → **Model Training (XGBoost / LGBM / RF)**  
-6. → **Optional Stacking Meta-Learner**  
-7. → **Saved Model (`model.joblib`)**  
-8. → **Inference (`infer()` → Probabilities)**  
-9. → **Prediction Output (`data/prediction.parquet`)**  
-10. → **Evaluation (AUC-ROC)**  
-
----
-
-## Files Produced
-
-| File | Description |
-|------|--------------|
-| `model.joblib` | Trained model and preprocessing pipeline |
-| `train_metrics.csv` | Recorded training metrics (AUC, sample count, etc.) |
-| `data/prediction.parquet` | Inference output (Crunch-compatible) |
-| `X_features_test.csv` *(optional)* | Exported test features for inspection |
-
----
-
-## Recommended Improvements
+## If I had more time i would try to: 
 
 - **Hyperparameter tuning** — integrate `Optuna` or `GridSearchCV`  
 - **Cross-validation** — apply stratified or time-based CV  
 - **Feature importance** — add SHAP/Permutation Importance analysis  
 - **Performance optimization** — vectorize heavy operations  
-- **Reproducibility** — ensure random seeds and full pipeline serialization  
-- **Testing** — unit tests for `train()` and `infer()` consistency  
+
 
 ---
