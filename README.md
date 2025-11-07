@@ -14,15 +14,10 @@ Out of 490 competitors, my solution ranked 52nd, placing in the top 11% of parti
 <img width="740" height="233" alt="image" src="https://github.com/user-attachments/assets/08a00a36-0b89-4593-8864-836a7c7c18ea" />
 
 ---
-
+## Methods & Components (Detailed)
 
 <img width="1412" height="824" alt="image" src="https://github.com/user-attachments/assets/9baaf376-2f54-450c-a554-c1af19350fb6" />
 
-
-
-
-
-## Methods & Components (Detailed)
 
 ### 1. Data Loading
 - Data is loaded using the `crunch.load_data()` helper provided by the competition.
